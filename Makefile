@@ -4,6 +4,8 @@ RIOTBASE ?= $(CURDIR)/../riot
 QUIET ?= 1
 DEVELHELP ?= 1
 
+USEMODULE += periph_uart
+USEMODULE += periph_hwrng
 USEMODULE += stdio_null
 USEMODULE += sx1276
 USEMODULE += xtimer

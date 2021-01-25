@@ -16,7 +16,7 @@
 static char stack[SX127X_STACKSIZE];
 static kernel_pid_t lora_recv_pid;
 static sx127x_t sx127x;
-static char lora_buffer[64];
+static char lora_buffer[MAX_PACKET_LEN];
 
 static forward_data_cb_t *lora_forwarder;
 static void _lora_rx_cb(netdev_t *dev, netdev_event_t event);
@@ -52,18 +52,16 @@ int lora_init(forward_data_cb_t *forwarder)
     return 0;
 }
 
-size_t lora_send(char *msg, size_t len)
+int lora_send(char *msg, size_t len)
 {
     iolist_t payload = {
         .iol_base = msg,
         .iol_len = len,
     };
 
-    LED1_ON;
     netdev_t *netdev = (netdev_t *)&sx127x;
-    if (netdev->driver->send(netdev, &payload) == -ENOTSUP) return 0;
-    LED1_OFF;
-    return len;
+    if (netdev->driver->send(netdev, &payload) == -ENOTSUP) return -1;
+    return 0;
 }
 
 void lora_listen(void)
@@ -94,7 +92,8 @@ static void _lora_rx_cb(netdev_t *dev, netdev_event_t event)
                 while (len > 0) {
                     n = len < sizeof(lora_buffer) ? len : sizeof(lora_buffer);
                     dev->driver->recv(dev, lora_buffer, n, NULL);
-                    len -= (*lora_forwarder)(lora_buffer, n);
+                    (*lora_forwarder)(lora_buffer, n);
+                    len -= n;
                 }
                 break;
             case NETDEV_EVENT_TX_COMPLETE:
