@@ -1,5 +1,16 @@
 #include "thread.h"
+
+#ifdef MODULE_USBUS_CDC_ACM
+#include <sys/types.h>
+#include "isrpipe.h"
+#include "usb/usbus.h"
+#include "usb/usbus/cdc/acm.h"
+#ifdef MODULE_USB_BOARD_RESET
+#include "usb_board_reset_internal.h"
+#endif
+#else
 #include "periph/uart.h"
+#endif
 
 #include "common.h"
 
@@ -10,19 +21,37 @@
 static char stack[SERIAL_STACKSIZE];
 static kernel_pid_t serial_recv_pid;
 
-static char uart_buffer[31];
-static size_t uart_buffer_size;
-static void _uart_rx_cb(void *arg, unsigned char data);
+static char serial_buffer[31];
+static uint8_t _serial_rx_buf_mem[128];
+static isrpipe_t _serial_isrpipe = ISRPIPE_INIT(_serial_rx_buf_mem);
 void *_serial_recv_thread(void *arg);
+
+#ifdef MODULE_USBUS_CDC_ACM
+static char usbus_stack[USBUS_STACKSIZE];
+static usbus_t usbus;
+static usbus_cdcacm_device_t cdcacm;
+static uint8_t _cdc_tx_buf_mem[CONFIG_USBUS_CDC_ACM_STDIO_BUF_SIZE];
+static void _cdc_acm_rx_pipe(usbus_cdcacm_device_t *cdcacm, uint8_t *data, size_t len);
+#else
+static void _uart_rx_cb(void *arg, unsigned char data);
+#endif
 
 static forward_data_cb_t *serial_forwarder;
 
 int serial_init(forward_data_cb_t *forwarder)
 {
     serial_forwarder = forwarder;
+    serial_buffer_size = 0;
 
-    uart_buffer_size = 0;
+#ifdef MODULE_USBUS_CDC_ACM
+    usbdev_t *usbdev = usbdev_get_ctx(0);
+    usbus_init(&usbus, usbdev);
+    usbus_cdc_acm_init(&usbus, &cdcacm, _cdc_acm_rx_pipe, NULL,
+                       _cdc_tx_buf_mem, sizeof(_cdc_tx_buf_mem));
+    usbus_create(usbus_stack, USBUS_STACKSIZE, USBUS_PRIO, USBUS_TNAME, &usbus);
+#else
     if (uart_init(UART_DEV(0), 115200, _uart_rx_cb, NULL) < 0) return 1;
+#endif
 
     serial_recv_pid = thread_create(stack, sizeof(stack), THREAD_PRIORITY_MAIN - 1,
                               THREAD_CREATE_STACKTEST, _serial_recv_thread, NULL,
@@ -34,20 +63,51 @@ int serial_init(forward_data_cb_t *forwarder)
 
 int serial_write(char *buffer, size_t len)
 {
+#ifdef MODULE_USBUS_CDC_ACM
+    /* TODO: flush full buffer */
+    const char *start = buffer;
+    do {
+        size_t n = usbus_cdc_acm_submit(&cdcacm, (const void *)buffer, len);
+        usbus_cdc_acm_flush(&cdcacm);
+        /* Use tsrb and flush */
+        buffer = buffer + n;
+        len -= n;
+    } while (len);
+    return buffer - start;
+#else
     uart_write(UART_DEV(0), (const uint8_t *)buffer, len);
     return len;
+#endif
 }
 
-static void _uart_rx_cb(void *arg, unsigned char data)
+#ifdef MODULE_USBUS_CDC_ACM
+static void _cdc_acm_rx_pipe(usbus_cdcacm_device_t *cdcacm,
+                             uint8_t *data, size_t len)
 {
-    (void)arg;
+    (void)cdcacm;
+    for (size_t i = 0; i < len; i++) {
+        isrpipe_write_one(&_serial_isrpipe, data[i]);
+    }
     msg_t msg;
     msg.type = MSG_TYPE_ISR;
-    msg.content.value = data;
+    msg.content.value = len;
     if (msg_send(&msg, serial_recv_pid) <= 0) {
        /* possibly lost interrupt */
     }
 }
+#else
+static void _uart_rx_cb(void *arg, unsigned char data)
+{
+    (void)arg;
+    isrpipe_write_one(&_serial_isrpipe, data);
+    msg_t msg;
+    msg.type = MSG_TYPE_ISR;
+    msg.content.value = 1;
+    if (msg_send(&msg, serial_recv_pid) <= 0) {
+       /* possibly lost interrupt */
+    }
+}
+#endif
 
 void *_serial_recv_thread(void *arg)
 {
@@ -58,13 +118,14 @@ void *_serial_recv_thread(void *arg)
         msg_t msg;
         msg_receive(&msg);
         if (msg.type == MSG_TYPE_ISR) {
-            unsigned char data = msg.content.value;
-            if (uart_buffer_size < sizeof(uart_buffer)) {
-                uart_buffer[uart_buffer_size++] = (char)data;
-            }
-            if ((data == '\r') || (data == '\n') || (uart_buffer_size == (sizeof(uart_buffer)))) {
-                serial_forwarder(uart_buffer, uart_buffer_size);
-                uart_buffer_size = 0;
+            unsigned char len = msg.content.value;
+            while (len > 0) {
+                size_t n = len < sizeof(serial_buffer) ? len : sizeof(serialbuffer);
+                isrpipe_read(&_cdc_stdio_isrpipe, serial_buffer, len);
+                if ((serial_buffer[n-1] == '\r') || (serial_buffer[n] == '\n') || (n == (sizeof(serial_buffer)))) {
+                    serial_forwarder(serial_buffer, n);
+                }
+                len -= n;
             }
         }
     }

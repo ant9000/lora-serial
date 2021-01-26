@@ -17,7 +17,7 @@ static uint8_t aes_input[AES_BUFFER_LEN], aes_output[AES_BUFFER_LEN];
 
 mutex_t lora_write_lock, serial_write_lock;
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 static char hexdump_buffer[64];
 static void debug(char *msg) { serial_write(msg, strlen(msg)); }
