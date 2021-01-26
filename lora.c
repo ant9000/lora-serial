@@ -52,7 +52,7 @@ int lora_init(forward_data_cb_t *forwarder)
     return 0;
 }
 
-int lora_send(char *msg, size_t len)
+int lora_write(char *msg, size_t len)
 {
     iolist_t payload = {
         .iol_base = msg,
@@ -61,7 +61,7 @@ int lora_send(char *msg, size_t len)
 
     netdev_t *netdev = (netdev_t *)&sx127x;
     if (netdev->driver->send(netdev, &payload) == -ENOTSUP) return -1;
-    return 0;
+    return len;
 }
 
 void lora_listen(void)
@@ -92,7 +92,7 @@ static void _lora_rx_cb(netdev_t *dev, netdev_event_t event)
                 while (len > 0) {
                     n = len < sizeof(lora_buffer) ? len : sizeof(lora_buffer);
                     dev->driver->recv(dev, lora_buffer, n, NULL);
-                    (*lora_forwarder)(lora_buffer, n);
+                    lora_forwarder(lora_buffer, n);
                     len -= n;
                 }
                 break;

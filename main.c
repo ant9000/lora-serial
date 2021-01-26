@@ -41,11 +41,10 @@ static void hexdump(char *msg, char *buffer, size_t len)
 }
 #endif
 
-int to_serial(char *buffer, size_t len)
+void to_serial(char *buffer, size_t len)
 {
     LED0_ON;
     int n = len - 12 - 16;
-    int res = -1;
     if ((n > 0) && (n <= MAX_PACKET_LEN + 16)) {
 #if DEBUG
         hexdump("RECEIVED PACKET:\r\n", buffer, len);
@@ -63,7 +62,7 @@ int to_serial(char *buffer, size_t len)
             char c = aes_output[n-1];
             if (c <= 16) {
                 n -= c;
-                res = serial_write((char *)aes_output, n);
+                serial_write((char *)aes_output, n);
             } else {
                 // packet with invalid padding - discard
 #if DEBUG
@@ -83,10 +82,9 @@ int to_serial(char *buffer, size_t len)
 #endif
     }
     LED0_OFF;
-    return res;
 }
 
-int to_lora(char *buffer, size_t len)
+void to_lora(char *buffer, size_t len)
 {
     LED1_ON;
     uint8_t nonce[12];
@@ -108,9 +106,8 @@ int to_lora(char *buffer, size_t len)
 #if DEBUG
     hexdump("ENCRYPTED PACKET:\r\n", (char *)aes_output, len);
 #endif
-    int res = lora_send((char *)aes_output, len);
+    lora_write((char *)aes_output, len);
     LED1_OFF;
-    return res;
 }
 
 int main(void)

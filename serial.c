@@ -4,6 +4,8 @@
 
 static char uart_buffer[MAX_PACKET_LEN];
 static size_t uart_buffer_size;
+static void _uart_rx_cb(void *arg, unsigned char data);
+
 
 static forward_data_cb_t *serial_forwarder;
 
@@ -12,20 +14,19 @@ int serial_init(forward_data_cb_t *forwarder)
     serial_forwarder = forwarder;
 
     uart_buffer_size = 0;
-    if (uart_init(UART_DEV(0), 115200, serial_rx_cb, NULL) < 0) return 1;
+    if (uart_init(UART_DEV(0), 115200, _uart_rx_cb, NULL) < 0) return 1;
     return 0;
 }
 
 int serial_write(char *buffer, size_t len)
 {
     uart_write(UART_DEV(0), (const uint8_t *)buffer, len);
-    return 0;
+    return len;
 }
 
-void serial_rx_cb(void *arg, unsigned char data)
+static void _uart_rx_cb(void *arg, unsigned char data)
 {
     (void)arg;
-
     if (uart_buffer_size < MAX_PACKET_LEN) {
         uart_buffer[uart_buffer_size++] = data;
     }

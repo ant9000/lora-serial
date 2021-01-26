@@ -10,7 +10,6 @@ USEMODULE += stdio_null
 USEMODULE += sx1276
 USEMODULE += xtimer
 
-#USEMODULE += auto_init_usbus
 #USEMODULE += usbus_cdc_acm
 #DEFAULT_VID = 1209
 #DEFAULT_PID = 0001
