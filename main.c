@@ -14,7 +14,7 @@ static uint8_t aes_key[16] = {
 #define AES_BUFFER_LEN (MAX_PACKET_LEN + 16 + 12 + 16)
 static uint8_t aes_input[AES_BUFFER_LEN], aes_output[AES_BUFFER_LEN];
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 static char hexdump_buffer[64];
 static void debug(char *msg) { serial_write(msg, strlen(msg)); }

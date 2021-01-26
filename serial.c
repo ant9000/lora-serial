@@ -29,7 +29,7 @@ void serial_rx_cb(void *arg, unsigned char data)
     if (uart_buffer_size < MAX_PACKET_LEN) {
         uart_buffer[uart_buffer_size++] = data;
     }
-    if ((data == '\r') || (data == '\n') || (uart_buffer_size == MAX_PACKET_LEN)) {
+    if ((data == '\r') || (data == '\n') || (uart_buffer_size > (MAX_PACKET_LEN >> 2))) {
         serial_forwarder(uart_buffer, uart_buffer_size);
         uart_buffer_size = 0;
     }
