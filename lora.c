@@ -32,7 +32,7 @@ int lora_init(forward_data_cb_t *forwarder)
 
     if (netdev->driver->init(netdev) < 0) return 1;
 
-    uint8_t lora_bw = LORA_BW_125_KHZ;
+    uint8_t lora_bw = LORA_BW_500_KHZ;
     uint8_t lora_sf = LORA_SF7;
     uint8_t lora_cr = LORA_CR_4_5;
     uint32_t chan = SX127X_CHANNEL_DEFAULT;
@@ -58,7 +58,6 @@ int lora_write(char *msg, size_t len)
         .iol_base = msg,
         .iol_len = len,
     };
-
     netdev_t *netdev = (netdev_t *)&sx127x;
     if (netdev->driver->send(netdev, &payload) == -ENOTSUP) return -1;
     return len;
@@ -85,16 +84,12 @@ static void _lora_rx_cb(netdev_t *dev, netdev_event_t event)
            /* possibly lost interrupt */
         }
     } else {
-        size_t len, n;
+        size_t len;
         switch (event) {
             case NETDEV_EVENT_RX_COMPLETE:
                 len = dev->driver->recv(dev, NULL, 0, 0);
-                while (len > 0) {
-                    n = len < sizeof(lora_buffer) ? len : sizeof(lora_buffer);
-                    dev->driver->recv(dev, lora_buffer, n, NULL);
-                    lora_forwarder(lora_buffer, n);
-                    len -= n;
-                }
+                dev->driver->recv(dev, lora_buffer, len, NULL);
+                lora_forwarder(lora_buffer, len);
                 break;
             case NETDEV_EVENT_TX_COMPLETE:
                 lora_listen();
