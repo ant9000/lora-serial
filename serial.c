@@ -1,8 +1,8 @@
 #include "thread.h"
+#include "isrpipe.h"
 
 #ifdef MODULE_USBUS_CDC_ACM
 #include <sys/types.h>
-#include "isrpipe.h"
 #include "usb/usbus.h"
 #include "usb/usbus/cdc/acm.h"
 #ifdef MODULE_USB_BOARD_RESET
@@ -21,7 +21,8 @@
 static char stack[SERIAL_STACKSIZE];
 static kernel_pid_t serial_recv_pid;
 
-static char serial_buffer[31];
+static uint8_t serial_buffer[31];
+static size_t serial_buffer_count;
 static uint8_t _serial_rx_buf_mem[128];
 static isrpipe_t _serial_isrpipe = ISRPIPE_INIT(_serial_rx_buf_mem);
 void *_serial_recv_thread(void *arg);
@@ -41,7 +42,7 @@ static forward_data_cb_t *serial_forwarder;
 int serial_init(forward_data_cb_t *forwarder)
 {
     serial_forwarder = forwarder;
-    serial_buffer_size = 0;
+    serial_buffer_count = 0;
 
 #ifdef MODULE_USBUS_CDC_ACM
     usbdev_t *usbdev = usbdev_get_ctx(0);
@@ -118,12 +119,16 @@ void *_serial_recv_thread(void *arg)
         msg_t msg;
         msg_receive(&msg);
         if (msg.type == MSG_TYPE_ISR) {
-            unsigned char len = msg.content.value;
+            size_t len = msg.content.value;
             while (len > 0) {
-                size_t n = len < sizeof(serial_buffer) ? len : sizeof(serialbuffer);
-                isrpipe_read(&_cdc_stdio_isrpipe, serial_buffer, len);
-                if ((serial_buffer[n-1] == '\r') || (serial_buffer[n] == '\n') || (n == (sizeof(serial_buffer)))) {
-                    serial_forwarder(serial_buffer, n);
+                size_t serial_buffer_free = sizeof(serial_buffer) - serial_buffer_count;
+                size_t n = len < serial_buffer_free ? len : serial_buffer_free;
+                uint8_t *start = serial_buffer + serial_buffer_count;
+                isrpipe_read(&_serial_isrpipe, start, n);
+                serial_buffer_count += n;
+                if ((start[n-1] == '\r') || (start[n] == '\n') || (serial_buffer_count == sizeof(serial_buffer))) {
+                    serial_forwarder((char *)serial_buffer, serial_buffer_count);
+                    serial_buffer_count = 0;
                 }
                 len -= n;
             }

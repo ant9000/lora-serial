@@ -8,6 +8,7 @@ USEMODULE += periph_hwrng
 USEMODULE += stdio_null
 USEMODULE += sx1276
 USEMODULE += xtimer
+USEMODULE += isrpipe
 
 ifeq (usb,$(SERIAL_INTERFACE))
   USEMODULE += usbus_cdc_acm
