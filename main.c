@@ -1,5 +1,6 @@
 #include <string.h>
 #include "board.h"
+#include "mutex.h"
 #include "xtimer.h"
 
 #include "common.h"
@@ -13,6 +14,8 @@ static uint8_t aes_key[16] = {
 };
 #define AES_BUFFER_LEN (MAX_PACKET_LEN + 16 + 12 + 16)
 static uint8_t aes_input[AES_BUFFER_LEN], aes_output[AES_BUFFER_LEN];
+
+mutex_t lora_write_lock, serial_write_lock;
 
 #define DEBUG 0
 #if DEBUG
@@ -43,6 +46,7 @@ static void hexdump(char *msg, char *buffer, size_t len)
 
 void to_serial(char *buffer, size_t len)
 {
+    mutex_lock(&serial_write_lock);
     LED0_ON;
     int n = len - 12 - 16;
     if ((n > 0) && (n <= MAX_PACKET_LEN + 16)) {
@@ -82,10 +86,12 @@ void to_serial(char *buffer, size_t len)
 #endif
     }
     LED0_OFF;
+    mutex_unlock(&serial_write_lock);
 }
 
 void to_lora(char *buffer, size_t len)
 {
+    mutex_lock(&lora_write_lock);
     LED1_ON;
     uint8_t nonce[12];
     uint8_t tag[16];
@@ -108,6 +114,7 @@ void to_lora(char *buffer, size_t len)
 #endif
     lora_write((char *)aes_output, len);
     LED1_OFF;
+    mutex_unlock(&lora_write_lock);
 }
 
 int main(void)
