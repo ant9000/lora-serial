@@ -1,8 +1,15 @@
 #!/usr/bin/env -S python3 -u
 
-import serial, time
+import sys, serial, time
 
-s = serial.Serial('/dev/ttyACM0', 115200)
+device = '/dev/ttyACM0'
+baud = 115200
+if len(sys.argv) > 1:
+    device = sys.argv[1]
+if len(sys.argv) > 2:
+    baud = sys.argv[2]
+
+s = serial.Serial(device, baud)
 i = 0
 while True:
     for c in range(32,127):
@@ -12,4 +19,4 @@ while True:
         if i % 80 == 0:
             print('')
             i = 0
-        time.sleep(.01)
+        time.sleep(.001)

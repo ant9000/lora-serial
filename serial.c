@@ -14,7 +14,7 @@
 
 #include "common.h"
 
-#define SERIAL_MSG_QUEUE   (16U)
+#define SERIAL_MSG_QUEUE   (128U)
 #define SERIAL_STACKSIZE   (THREAD_STACKSIZE_DEFAULT)
 #define MSG_TYPE_ISR       (0x3456)
 
