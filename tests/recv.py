@@ -11,11 +11,14 @@ if len(sys.argv) > 2:
 
 s = serial.Serial(device, baud, timeout=0)
 i = 0
-while True:
-    c = s.read()
-    if c:
-        i += 1
-        print(c.decode('utf8'), end='')
-        if i % 80 == 0:
-            print('')
-            i = 0
+try:
+    while True:
+        c = s.read()
+        if c:
+            i += 1
+            print(c.decode('utf8'), end='')
+            if i % 80 == 0:
+                print('')
+except KeyboardInterrupt:
+    print("")
+    print("Received %d characters." % i)
