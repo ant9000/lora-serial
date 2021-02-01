@@ -9,7 +9,7 @@ if len(sys.argv) > 1:
 if len(sys.argv) > 2:
     baud = sys.argv[2]
 
-s = serial.Serial(device, baud, timeout=0)
+s = serial.Serial(device, baud)
 i = 0
 try:
     while True:
