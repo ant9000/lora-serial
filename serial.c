@@ -110,6 +110,13 @@ static void _uart_rx_cb(void *arg, unsigned char data)
 }
 #endif
 
+static void serial_buffer_flush(void) {
+    if (serial_buffer_count > 0) {
+        serial_forwarder((char *)serial_buffer, serial_buffer_count);
+        serial_buffer_count = 0;
+    }
+}
+
 void *_serial_recv_thread(void *arg)
 {
     (void)arg;
@@ -126,11 +133,13 @@ void *_serial_recv_thread(void *arg)
                 uint8_t *start = serial_buffer + serial_buffer_count;
                 isrpipe_read(&_serial_isrpipe, start, n);
                 serial_buffer_count += n;
-                if ((start[n-1] == '\r') || (start[n] == '\n') || (serial_buffer_count == sizeof(serial_buffer))) {
-                    serial_forwarder((char *)serial_buffer, serial_buffer_count);
-                    serial_buffer_count = 0;
+                if (serial_buffer_count == sizeof(serial_buffer)) {
+                    serial_buffer_flush();
                 }
                 len -= n;
+            }
+            if ((msg_avail() == 0) && (serial_buffer_count > 0)) {
+                serial_buffer_flush();
             }
         }
     }
