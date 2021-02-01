@@ -6,8 +6,6 @@ DEVELHELP ?= 1
 #SERIAL_INTERFACE ?= usb
 
 USEMODULE += periph_hwrng
-USEMODULE += stdio_uart
-USEMODULE += stdio_uart_rx
 USEMODULE += sx1276
 USEMODULE += xtimer
 USEMODULE += isrpipe
@@ -15,7 +13,7 @@ USEMODULE += isrpipe
 CFLAGS += -DCONFIG_SKIP_BOOT_MSG=1
 
 ifeq (usb,$(SERIAL_INTERFACE))
-  USEMODULE += usbus_cdc_acm
+  USEMODULE += auto_init_usbus
   USEMODULE += stdio_cdc_acm
 
   # USB device vendor and product ID
@@ -27,7 +25,8 @@ ifeq (usb,$(SERIAL_INTERFACE))
   CFLAGS += -DUSB_CONFIG_VID=0x$(USB_VID) -DUSB_CONFIG_PID=0x$(USB_PID)
   CFLAGS += -DCONFIG_USB_MAX_POWER=500
 else
-  USEMODULE += periph_uart
+  USEMODULE += stdio_uart
+  USEMODULE += stdio_uart_rx
 endif
 
 include $(RIOTBASE)/Makefile.include
