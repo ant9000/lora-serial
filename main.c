@@ -1,7 +1,6 @@
 #include <string.h>
 #include "board.h"
 #include "mutex.h"
-#include "xtimer.h"
 
 #include "common.h"
 #include "aes.h"

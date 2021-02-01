@@ -59,7 +59,7 @@ int lora_write(char *msg, size_t len)
         .iol_len = len,
     };
     netdev_t *netdev = (netdev_t *)&sx127x;
-    if (netdev->driver->send(netdev, &payload) == -ENOTSUP) return -1;
+    while (netdev->driver->send(netdev, &payload) == -ENOTSUP) { xtimer_usleep64(100); }
     return len;
 }
 
