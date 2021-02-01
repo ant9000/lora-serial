@@ -15,6 +15,10 @@
 #define USE_AES 1
 #endif
 
+#if DEBUG
+#include "od.h"
+#endif
+
 #if USE_AES
 struct aes_sync_device aes;
 static uint8_t aes_key[16] = {
@@ -31,28 +35,10 @@ static uint8_t serial_buffer[31];
 static size_t serial_buffer_count;
 
 #if DEBUG
-static char hexdump_buffer[64];
-static void debug(char *msg) { stdio_write(msg, strlen(msg)); }
 static void hexdump(char *msg, char *buffer, size_t len)
 {
-    debug(msg);
-    memset(hexdump_buffer, ' ', 63);
-    hexdump_buffer[63] = 0;
-    for(size_t i=0; i<len; i+=8) {
-        size_t j;
-        for(j=0; (j<8) && (i+j)<len; j++){
-            char c = buffer[i+j];
-            hexdump_buffer[j*3]     = "0123456789ABCDEF"[(c >> 4) & 0x0F];
-            hexdump_buffer[j*3 + 1] = "0123456789ABCDEF"[c & 0x0F];
-        }
-        j++;
-        hexdump_buffer[j*3]     = '\r';
-        hexdump_buffer[j*3 + 1] = '\n';
-        hexdump_buffer[j*3 + 2] = 0;
-        stdio_write(hexdump_buffer, j*3 + 3);
-        memset(hexdump_buffer, ' ', 63);
-        hexdump_buffer[63] = 0;
-    }
+    puts(msg);
+    od_hex_dump(buffer, len, 0);
 }
 #endif // DEBUG
 
@@ -64,7 +50,7 @@ void to_serial(char *buffer, size_t len)
     int n = len - 12 - 16;
     if ((n > 0) && (n <= MAX_PACKET_LEN + 16)) {
 #if DEBUG
-        hexdump("RECEIVED PACKET:\r\n", buffer, len);
+        hexdump("RECEIVED PACKET:", buffer, len);
 #endif // DEBUG
         uint8_t *aes_input = (uint8_t *)buffer;
         uint8_t *nonce = aes_input + n;
@@ -73,7 +59,7 @@ void to_serial(char *buffer, size_t len)
         aes_sync_gcm_crypt_and_tag(&aes, AES_DECRYPT, aes_input, aes_output, (size_t)n, nonce, 12, NULL, 0, verify, 16);
         if (memcmp(tag, verify, 16) == 0) {
 #if DEBUG
-            hexdump("AUTHENTICATED PADDED CONTENT:\r\n",(char *)aes_output, n);
+            hexdump("AUTHENTICATED PADDED CONTENT:",(char *)aes_output, n);
 #endif // DEBUG
             // remove padding
             char c = aes_output[n-1];
@@ -83,19 +69,19 @@ void to_serial(char *buffer, size_t len)
             } else {
                 // packet with invalid padding - discard
 #if DEBUG
-            debug("INVALID PADDING\r\n");
+            puts("INVALID PADDING");
 #endif // DEBUG
             }
         } else {
             // unauthenticated packet - discard
 #if DEBUG
-            debug("PACKET NOT AUTHENTICATED\r\n");
+            puts("PACKET NOT AUTHENTICATED");
 #endif // DEBUG
         }
     } else {
         // invalid length - discard
 #if DEBUG
-            hexdump("PACKET HAS INVALID LENGTH\r\n", (char *)&len, 4);
+            hexdump("PACKET HAS INVALID LENGTH", (char *)&len, 4);
 #endif // DEBUG
     }
 #else
@@ -119,7 +105,7 @@ void to_lora(char *buffer, size_t len)
     memset(aes_input + len, c, c);
     len += c;
 #if DEBUG
-    hexdump("PADDED PACKET:\r\n", (char *)aes_input, len);
+    hexdump("PADDED PACKET:", (char *)aes_input, len);
 #endif // DEBUG
     aes_sync_gcm_crypt_and_tag(&aes, AES_ENCRYPT, aes_input, aes_output, len, nonce, 12, NULL, 0, tag, 16);
     memcpy(aes_output + len, nonce, 12);
@@ -127,13 +113,12 @@ void to_lora(char *buffer, size_t len)
     memcpy(aes_output + len, tag, 16);
     len += 16;
 #if DEBUG
-    hexdump("ENCRYPTED PACKET:\r\n", (char *)aes_output, len);
+    hexdump("ENCRYPTED PACKET:", (char *)aes_output, len);
 #endif // DEBUG
     lora_write((char *)aes_output, len);
 #else
     lora_write(buffer, len);
 #endif // USE_AES
-puts("SENT");
     LED1_OFF;
     mutex_unlock(&lora_write_lock);
 }

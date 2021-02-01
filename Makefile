@@ -9,6 +9,8 @@ USEMODULE += periph_hwrng
 USEMODULE += sx1276
 USEMODULE += xtimer
 USEMODULE += isrpipe
+USEMODULE += od
+USEMODULE += od_string
 
 CFLAGS += -DCONFIG_SKIP_BOOT_MSG=1
 
