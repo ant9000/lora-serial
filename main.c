@@ -1,4 +1,5 @@
 #include <string.h>
+#include "stdio_base.h"
 #include "board.h"
 #include "mutex.h"
 
@@ -26,9 +27,12 @@ static uint8_t aes_input[AES_BUFFER_LEN], aes_output[AES_BUFFER_LEN];
 
 mutex_t lora_write_lock, serial_write_lock;
 
+static uint8_t serial_buffer[31];
+static size_t serial_buffer_count;
+
 #if DEBUG
 static char hexdump_buffer[64];
-static void debug(char *msg) { serial_write(msg, strlen(msg)); }
+static void debug(char *msg) { stdio_write(msg, strlen(msg)); }
 static void hexdump(char *msg, char *buffer, size_t len)
 {
     debug(msg);
@@ -45,7 +49,7 @@ static void hexdump(char *msg, char *buffer, size_t len)
         hexdump_buffer[j*3]     = '\r';
         hexdump_buffer[j*3 + 1] = '\n';
         hexdump_buffer[j*3 + 2] = 0;
-        serial_write(hexdump_buffer, j*3 + 3);
+        stdio_write(hexdump_buffer, j*3 + 3);
         memset(hexdump_buffer, ' ', 63);
         hexdump_buffer[63] = 0;
     }
@@ -75,7 +79,7 @@ void to_serial(char *buffer, size_t len)
             char c = aes_output[n-1];
             if (c <= 16) {
                 n -= c;
-                serial_write((char *)aes_output, n);
+                stdio_write((char *)aes_output, n);
             } else {
                 // packet with invalid padding - discard
 #if DEBUG
@@ -95,7 +99,7 @@ void to_serial(char *buffer, size_t len)
 #endif // DEBUG
     }
 #else
-    serial_write(buffer, len);
+    stdio_write((const uint8_t *)buffer, len);
 #endif // USE_AES
     LED0_OFF;
     mutex_unlock(&serial_write_lock);
@@ -129,6 +133,7 @@ void to_lora(char *buffer, size_t len)
 #else
     lora_write(buffer, len);
 #endif // USE_AES
+puts("SENT");
     LED1_OFF;
     mutex_unlock(&lora_write_lock);
 }
@@ -146,13 +151,28 @@ int main(void)
 #endif // USE_AES
     // setup LoRa
     if (lora_init(*to_serial) != 0) { return 1; }
-    // setup serial
-    if (serial_init(*to_lora) != 0) { return 1; }
     // put radio in listen mode
     lora_listen();
     LED0_OFF;
     LED1_OFF;
-    // loop forever
-    while (1) { xtimer_sleep(1); }
+
+    uint8_t *start;
+    size_t n, buffer_free;
+    // read from serial
+    serial_buffer_count = 0;
+    while (1) {
+        if (serial_buffer_count == sizeof(serial_buffer)) { // buffer full
+            to_lora((char *)serial_buffer, serial_buffer_count);
+            serial_buffer_count = 0;
+        }
+        start = serial_buffer + serial_buffer_count;
+        buffer_free = sizeof(serial_buffer) - serial_buffer_count;
+        n = stdio_read((void *)start, buffer_free);
+        serial_buffer_count += n;
+        if (n > 0 && n < buffer_free) { // no pending chars on stdio
+            to_lora((char *)serial_buffer, serial_buffer_count);
+            serial_buffer_count = 0;
+        }
+    }
     return 0;
 }

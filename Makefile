@@ -3,15 +3,20 @@ BOARD ?= samr34-xpro
 RIOTBASE ?= $(CURDIR)/../riot
 QUIET ?= 1
 DEVELHELP ?= 1
+#SERIAL_INTERFACE ?= usb
 
 USEMODULE += periph_hwrng
-USEMODULE += stdio_null
+USEMODULE += stdio_uart
+USEMODULE += stdio_uart_rx
 USEMODULE += sx1276
 USEMODULE += xtimer
 USEMODULE += isrpipe
 
+CFLAGS += -DCONFIG_SKIP_BOOT_MSG=1
+
 ifeq (usb,$(SERIAL_INTERFACE))
   USEMODULE += usbus_cdc_acm
+  USEMODULE += stdio_cdc_acm
 
   # USB device vendor and product ID
   DEFAULT_VID = 1209
