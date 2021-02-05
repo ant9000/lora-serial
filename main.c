@@ -3,9 +3,12 @@
 #include "board.h"
 #include "mutex.h"
 
-#include "common.h"
-#include "aes.h"
 #include "periph/hwrng.h"
+#include "periph/gpio.h"
+
+#include "common.h"
+#include "configuration.h"
+#include "aes.h"
 
 #ifndef DEBUG
 #define DEBUG 0
@@ -18,6 +21,8 @@
 #if DEBUG
 #include "od.h"
 #endif
+
+serialized_state_t state;
 
 #if USE_AES
 struct aes_sync_device aes;
@@ -125,6 +130,12 @@ void to_lora(char *buffer, size_t len)
 
 int main(void)
 {
+
+    gpio_init(BTN0_PIN, BTN0_MODE);
+    if (gpio_read(BTN0_PIN) == 0) {
+        enter_configuration_mode();
+    }
+
     LED0_ON;
     LED1_ON;
 #if USE_AES
@@ -135,7 +146,7 @@ int main(void)
     aes_sync_set_encrypt_key(&aes, aes_key, AES_KEY_128);
 #endif // USE_AES
     // setup LoRa
-    if (lora_init(*to_serial) != 0) { return 1; }
+    if (lora_init(NULL, *to_serial) != 0) { return 1; }
     // put radio in listen mode
     lora_listen();
     LED0_OFF;

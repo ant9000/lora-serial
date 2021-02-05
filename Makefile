@@ -6,11 +6,13 @@ DEVELHELP ?= 1
 #SERIAL_INTERFACE ?= usb
 
 USEMODULE += periph_hwrng
+USEMODULE += periph_flashpage
 USEMODULE += sx1276
 USEMODULE += xtimer
 USEMODULE += isrpipe
 USEMODULE += od
 USEMODULE += od_string
+USEMODULE += shell
 
 CFLAGS += -DCONFIG_SKIP_BOOT_MSG=1
 

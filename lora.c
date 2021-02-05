@@ -22,7 +22,7 @@ static forward_data_cb_t *lora_forwarder;
 static void _lora_rx_cb(netdev_t *dev, netdev_event_t event);
 void *_lora_recv_thread(void *arg);
 
-int lora_init(forward_data_cb_t *forwarder)
+int lora_init(lora_state_t *state, forward_data_cb_t *forwarder)
 {
     lora_forwarder = forwarder;
 
@@ -35,12 +35,18 @@ int lora_init(forward_data_cb_t *forwarder)
     uint8_t lora_bw = LORA_BW_500_KHZ;
     uint8_t lora_sf = LORA_SF7;
     uint8_t lora_cr = LORA_CR_4_5;
-    uint32_t chan = SX127X_CHANNEL_DEFAULT;
+    uint32_t lora_ch = SX127X_CHANNEL_DEFAULT;
+    if (state != NULL) {
+        lora_bw = state->bandwidth;
+        lora_sf = state->spreading_factor;
+        lora_cr = state->coderate;
+        lora_ch = state->channel;
+    }
 
     netdev->driver->set(netdev, NETOPT_BANDWIDTH, &lora_bw, sizeof(lora_bw));
     netdev->driver->set(netdev, NETOPT_SPREADING_FACTOR, &lora_sf, sizeof(lora_sf));
     netdev->driver->set(netdev, NETOPT_CODING_RATE, &lora_cr, sizeof(lora_cr));
-    netdev->driver->set(netdev, NETOPT_CHANNEL_FREQUENCY, &chan, sizeof(chan));
+    netdev->driver->set(netdev, NETOPT_CHANNEL_FREQUENCY, &lora_ch, sizeof(lora_ch));
 
     netdev->event_callback = _lora_rx_cb;
 

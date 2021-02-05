@@ -1,3 +1,12 @@
-int lora_init(forward_data_cb_t *forwarder);
+typedef struct {
+    uint8_t  bandwidth;
+    uint8_t  spreading_factor;
+    uint8_t  coderate;
+    uint32_t channel;
+} lora_state_t;
+
+typedef void (forward_data_cb_t)(char *buffer, size_t len);
+
+int lora_init(lora_state_t *state, forward_data_cb_t *forwarder);
 int lora_write(char *msg, size_t len);
 void lora_listen(void);
