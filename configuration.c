@@ -119,9 +119,6 @@ void enter_configuration_mode(void) {
 
     char line_buf[SHELL_DEFAULT_BUFSIZE];
 
-    if (load_from_flash (&state, sizeof(state)) < 0) {
-        memset(&state, 0, sizeof(state));
-    }
     puts("Entering config mode - use 'help' for enumerating commands.");
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 }
