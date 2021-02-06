@@ -1,7 +1,6 @@
 #include "thread.h"
 #include "net/netdev.h"
 #include "net/netdev/lora.h"
-#include "net/lora.h"
 
 #include "sx127x_internal.h"
 #include "sx127x_params.h"
@@ -21,14 +20,6 @@ static char lora_buffer[MAX_PACKET_LEN];
 static forward_data_cb_t *lora_forwarder;
 static void _lora_rx_cb(netdev_t *dev, netdev_event_t event);
 void *_lora_recv_thread(void *arg);
-
-void lora_default_config(lora_state_t *state)
-{
-    state->bandwidth        = LORA_BW_500_KHZ;
-    state->spreading_factor = LORA_SF7;
-    state->coderate         = LORA_CR_4_5;
-    state->channel          = SX127X_CHANNEL_DEFAULT;
-}
 
 int lora_init(const lora_state_t *state, forward_data_cb_t *forwarder)
 {

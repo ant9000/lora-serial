@@ -37,10 +37,10 @@ static int cmd_show(int argc, char **argv)
     (void)argc;
     (void)argv;
     puts("LORA");
-    printf("Bandwidth:        %d\n",  state.lora.bandwidth);
-    printf("Spreading factor: %d\n",  state.lora.spreading_factor);
-    printf("Coding rate:      %d\n",  state.lora.coderate);
-    printf("Channel:          %ld\n", state.lora.channel);
+    printf("Bandwidth:        %u\n",  state.lora.bandwidth);
+    printf("Spreading factor: %u\n",  state.lora.spreading_factor);
+    printf("Coding rate:      %u\n",  state.lora.coderate);
+    printf("Channel:          %lu\n", state.lora.channel);
     puts("AES");
     printf("Key: ");
     for(size_t i = 0; i < sizeof(state.aes.key); i++) {

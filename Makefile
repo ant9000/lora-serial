@@ -10,6 +10,7 @@ USEMODULE += periph_flashpage
 USEMODULE += sx1276
 USEMODULE += xtimer
 USEMODULE += isrpipe
+USEMODULE += fmt
 USEMODULE += od
 USEMODULE += od_string
 USEMODULE += shell

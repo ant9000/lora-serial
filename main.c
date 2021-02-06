@@ -1,5 +1,6 @@
 #include <string.h>
 #include "debug.h"
+#include "fmt.h"
 #include "od.h"
 #include "stdio_base.h"
 #include "board.h"
@@ -16,10 +17,6 @@
 serialized_state_t state;
 
 struct aes_sync_device aes;
-static uint8_t aes_key[16] = {
-    0xce, 0x6e, 0x3f, 0xf5, 0x09, 0xc0, 0xee, 0x81,
-    0xd7, 0x9b, 0xd8, 0x5c, 0x4b, 0x5e, 0x79, 0x0d
-};
 #define AES_BUFFER_LEN (MAX_PACKET_LEN + 16 + 12 + 16)
 static uint8_t aes_input[AES_BUFFER_LEN], aes_output[AES_BUFFER_LEN];
 
@@ -92,8 +89,12 @@ void to_lora(char *buffer, size_t len)
 int main(void)
 {
     if (load_from_flash (&state, sizeof(state)) < 0) {
-        lora_default_config(&(state.lora));
-        memcpy(state.aes.key, aes_key, sizeof(aes_key));
+        memset(&state, 0, sizeof(state));
+        state.lora.bandwidth        = DEFAULT_LORA_BANDWIDTH;
+        state.lora.spreading_factor = DEFAULT_LORA_SPREADING_FACTOR;
+        state.lora.coderate         = DEFAULT_LORA_CODERATE;
+        state.lora.channel          = DEFAULT_LORA_CHANNEL;
+        fmt_hex_bytes(state.aes.key, DEFAULT_AES_KEY);
     }
 
     gpio_init(BTN0_PIN, BTN0_MODE);
