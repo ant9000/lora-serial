@@ -15,19 +15,76 @@ static int cmd_lora(int argc, char **argv)
     char *usage = "usage: lora (bw|sf|cr|ch) [value]";
     (void)argc;
     (void)argv;
-    puts("TODO");
-    puts(usage);
+    if (((argc != 2) && (argc != 3)) || (strcmp(argv[0], "lora") != 0)) {
+        puts(usage);
+        return -1;
+    }
+    if (strcmp(argv[1], "bw") == 0) {
+        if (argc == 3) {
+            if (strcmp(argv[2], "125") == 0) {
+                state.lora.bandwidth = 0;
+            } else if (strcmp(argv[2], "250") == 0) {
+                state.lora.bandwidth = 1;
+            } else if (strcmp(argv[2], "500") == 0) {
+                state.lora.bandwidth = 2;
+            } else {
+                puts("Bandwidth not in 125, 250, 500");
+                return -1;
+            }
+        }
+        printf("Bandwidth: %u kHz\n", 125*(1<<state.lora.bandwidth));
+    } else if (strcmp(argv[1], "sf") == 0) {
+        if (argc == 3) {
+            int value = atoi(argv[2]);
+            if ((value >= 6) && (value <= 12)) {
+                state.lora.spreading_factor = (uint8_t)value;
+            } else {
+                puts("Spreading factor not in 6-12");
+                return -1;
+            }
+        }
+        printf("Spreading factor: %u\n", state.lora.spreading_factor);
+    } else if (strcmp(argv[1], "cr") == 0) {
+        if (argc == 3) {
+            int value = atoi(argv[2]);
+            if ((value >= 5) && (value <= 8)) {
+                state.lora.coderate = (uint8_t)value-4;
+            } else {
+                puts("Coderate not in 5-8");
+                return -1;
+            }
+        }
+        printf("Coderate: 4/%u\n", state.lora.coderate);
+    } else if (strcmp(argv[1], "ch") == 0) {
+        if (argc == 3) {
+            puts("TODO");
+        }
+        printf("Channel: %lu\n", state.lora.channel);
+    } else {
+        puts(usage);
+        return -1;
+    }
     return 0;
 }
 
 
 static int cmd_aes(int argc, char **argv)
 {
-    char *usage = "usage: aes (key) [generate]";
+    char *usage = "usage: aes key [generate]";
     (void)argc;
     (void)argv;
-    puts("TODO");
-    puts(usage);
+    if (((argc != 2) && (argc != 3)) || (strcmp(argv[0], "aes") != 0)) {
+        puts(usage);
+        return -1;
+    }
+    if (argc == 3) {
+        puts("TODO");
+    }
+    printf("  Key: ");
+    for(size_t i = 0; i < sizeof(state.aes.key); i++) {
+        printf("%02x%s", state.aes.key[i], (i < sizeof(state.aes.key) - 1 ? ":" : ""));
+    }
+    printf("\n");
     return 0;
 }
 
@@ -37,12 +94,12 @@ static int cmd_show(int argc, char **argv)
     (void)argc;
     (void)argv;
     puts("LORA");
-    printf("Bandwidth:        %u\n",  state.lora.bandwidth);
-    printf("Spreading factor: %u\n",  state.lora.spreading_factor);
-    printf("Coding rate:      %u\n",  state.lora.coderate);
-    printf("Channel:          %lu\n", state.lora.channel);
+    printf("  Bandwidth:        %u kHz\n", 125*(1<<state.lora.bandwidth));
+    printf("  Spreading factor: %u\n",  state.lora.spreading_factor);
+    printf("  Coding rate:      4/%u\n",  state.lora.coderate+4);
+    printf("  Channel:          %lu\n", state.lora.channel);
     puts("AES");
-    printf("Key: ");
+    printf("  Key: ");
     for(size_t i = 0; i < sizeof(state.aes.key); i++) {
         printf("%02x%s", state.aes.key[i], (i < sizeof(state.aes.key) - 1 ? ":" : ""));
     }
