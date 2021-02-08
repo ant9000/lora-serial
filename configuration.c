@@ -1,9 +1,8 @@
 #include <string.h>
 
-#include "periph/gpio.h"
+#include "periph/hwrng.h"
 #include "periph/pm.h"
 
-#include "luid.h"
 #include "thread.h"
 #include "fmt.h"
 #include "shell.h"
@@ -54,10 +53,11 @@ static int cmd_lora(int argc, char **argv)
                 return -1;
             }
         }
-        printf("Coderate: 4/%u\n", state.lora.coderate);
+        printf("Coderate: 4/%u\n", state.lora.coderate+4);
     } else if (strcmp(argv[1], "ch") == 0) {
         if (argc == 3) {
-            puts("TODO");
+            uint32_t value = atoll(argv[2]);
+            state.lora.channel = value;
         }
         printf("Channel: %lu\n", state.lora.channel);
     } else {
@@ -70,7 +70,7 @@ static int cmd_lora(int argc, char **argv)
 
 static int cmd_aes(int argc, char **argv)
 {
-    char *usage = "usage: aes key [generate]";
+    char *usage = "usage: aes key [generate|value]";
     (void)argc;
     (void)argv;
     if (((argc != 2) && (argc != 3)) || (strcmp(argv[0], "aes") != 0)) {
@@ -78,13 +78,20 @@ static int cmd_aes(int argc, char **argv)
         return -1;
     }
     if (argc == 3) {
-        puts("TODO");
+        if (strcmp(argv[2], "generate") == 0) {
+            hwrng_init();
+            hwrng_read(state.aes.key, 16);
+        } else if (strlen(argv[2]) == 32) {
+            fmt_hex_bytes(state.aes.key, argv[2]);
+        } else {
+            puts("Key value should be a string of 32 hex digits.");
+            return -1;
+        }
     }
-    printf("  Key: ");
-    for(size_t i = 0; i < sizeof(state.aes.key); i++) {
-        printf("%02x%s", state.aes.key[i], (i < sizeof(state.aes.key) - 1 ? ":" : ""));
-    }
-    printf("\n");
+    char hex[33];
+    fmt_bytes_hex(hex, state.aes.key, 16);
+    hex[32] = 0;
+    printf("Key: %s\n", hex);
     return 0;
 }
 
@@ -99,11 +106,10 @@ static int cmd_show(int argc, char **argv)
     printf("  Coding rate:      4/%u\n",  state.lora.coderate+4);
     printf("  Channel:          %lu\n", state.lora.channel);
     puts("AES");
-    printf("  Key: ");
-    for(size_t i = 0; i < sizeof(state.aes.key); i++) {
-        printf("%02x%s", state.aes.key[i], (i < sizeof(state.aes.key) - 1 ? ":" : ""));
-    }
-    printf("\n");
+    char hex[33];
+    fmt_bytes_hex(hex, state.aes.key, 16);
+    hex[32] = 0;
+    printf("  Key: %s\n", hex);
     return 0;
 }
 
