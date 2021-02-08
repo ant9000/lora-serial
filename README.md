@@ -37,9 +37,11 @@ minicom -D /dev/ttyACM0
 
 (substitute the device node needed for your machine).
 
-TODO
-----
+CONFIGURATION
+-------------
 
-At present the LoRa radio parameters, as well as the 128 bit key for AES, are compiled statically in the firmware.
+Default LoRa radio parameters, as well as a default 128 bit key for AES, are compiled statically in the firmware in order to have a working serial link right after flashing, even with no configuration. Of course, using the default AES key in production nullifies the protection offered by encryption.
 
-I plan to implement a runtime configuration mode, accessible by turning on the board with BTN0 pressed. It will offer a shell for configuring all the needed parameters and saving them to EEPROM.
+A runtime configuration mode is accessible by turning on the board with BTN0 pressed. Using any serial emulator, it will be possible to configure interactively all the needed parameters, and then save them to the SAML21 EEPROM.
+
+Type _help_ in configuration mode to see the list of available commands.
