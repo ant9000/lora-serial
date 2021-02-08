@@ -45,3 +45,17 @@ Default LoRa radio parameters, as well as a default 128 bit key for AES, are com
 A runtime configuration mode is accessible by turning on the board with BTN0 pressed. Using any serial emulator, it will be possible to configure interactively all the needed parameters, and then save them to the SAML21 EEPROM.
 
 Type _help_ in configuration mode to see the list of available commands.
+
+
+EXAMPLE
+-------
+
+Connect one LoRa module to Linux machine `pc1`; let's say it appears as `/dev/ttyACM0`. Launch a terminal listener on that serial port, with
+
+```sudo agetty /dev/ttyACM0 115200```
+
+Now connect the second LoRa module to another Linux board `pc2`; suppose it is available as `/dev/ttyACM0` there too. Then with
+
+```screen /dev/ttyACM0 115200```
+
+from `pc2` you will obtain a remote login shell to `pc1`, over the LoRa link.
