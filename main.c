@@ -17,8 +17,7 @@
 serialized_state_t state;
 
 struct aes_sync_device aes;
-#define AES_BUFFER_LEN (MAX_PACKET_LEN + 16 + 12 + 16)
-static uint8_t aes_input[AES_BUFFER_LEN], aes_output[AES_BUFFER_LEN];
+static uint8_t aes_input[MAX_PACKET_LEN], aes_output[MAX_PACKET_LEN];
 
 mutex_t lora_write_lock, serial_write_lock;
 
@@ -32,7 +31,7 @@ void to_serial(char *buffer, size_t len)
     mutex_lock(&serial_write_lock);
     LED0_ON;
     int n = len - 12 - 16;
-    if ((n > 0) && (n <= MAX_PACKET_LEN + 16)) {
+    if ((n > 0) && (n <= MAX_PAYLOAD_LEN + 16)) {
         HEXDUMP("RECEIVED PACKET:", buffer, len);
         uint8_t *aes_input = (uint8_t *)buffer;
         uint8_t *nonce = aes_input + n;

@@ -83,15 +83,15 @@ static void _lora_rx_cb(netdev_t *dev, netdev_event_t event)
            /* possibly lost interrupt */
         }
     } else {
-        size_t len, n;
+        size_t len;
         switch (event) {
             case NETDEV_EVENT_RX_COMPLETE:
                 len = dev->driver->recv(dev, NULL, 0, 0);
-                while (len > 0) {
-                    n = len < sizeof(lora_buffer) ? len : sizeof(lora_buffer);
-                    dev->driver->recv(dev, lora_buffer, n, NULL);
-                    lora_forwarder(lora_buffer, n);
-                    len -= n;
+                if (len <= MAX_PACKET_LEN) {
+                    dev->driver->recv(dev, lora_buffer, len, NULL);
+                    lora_forwarder(lora_buffer, len);
+                } else {
+                    /* spurious communication - ignore */
                 }
                 break;
             case NETDEV_EVENT_TX_COMPLETE:

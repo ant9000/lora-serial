@@ -6,7 +6,9 @@
 #include "lora.h"
 #include "persistence.h"
 
-#define MAX_PACKET_LEN 80
+#define MAX_PAYLOAD_LEN 80
+/* AES-GCM requires padding of up to 16 bytes, plus nonce, plus tag */
+#define MAX_PACKET_LEN (MAX_PAYLOAD_LEN + 16 + 12 + 16)
 
 #define DEFAULT_LORA_BANDWIDTH        LORA_BW_500_KHZ
 #define DEFAULT_LORA_SPREADING_FACTOR LORA_SF7
