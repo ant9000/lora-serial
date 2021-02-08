@@ -21,7 +21,7 @@ static uint8_t aes_input[MAX_PACKET_LEN], aes_output[MAX_PACKET_LEN];
 
 mutex_t lora_write_lock, serial_write_lock;
 
-static uint8_t serial_buffer[31];
+static uint8_t serial_buffer[63];
 static size_t serial_buffer_count;
 
 #define HEXDUMP(msg, buffer, len) if (ENABLE_DEBUG) { puts(msg); od_hex_dump(buffer, len, 0); }

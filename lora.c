@@ -8,7 +8,7 @@
 
 #include "common.h"
 
-#define SX127X_LORA_MSG_QUEUE   (128U)
+#define SX127X_LORA_MSG_QUEUE   (256U)
 #define SX127X_STACKSIZE        (THREAD_STACKSIZE_DEFAULT)
 #define MSG_TYPE_ISR            (0x3456)
 

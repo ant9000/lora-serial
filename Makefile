@@ -16,6 +16,7 @@ USEMODULE += od_string
 USEMODULE += shell
 
 CFLAGS += -DCONFIG_SKIP_BOOT_MSG=1
+CFLAGS += -DSTDIO_UART_RX_BUFSIZE=4096
 
 ifeq (usb,$(SERIAL_INTERFACE))
   USEMODULE += auto_init_usbus
