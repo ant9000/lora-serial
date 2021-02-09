@@ -1,5 +1,4 @@
 #include <string.h>
-#include "debug.h"
 #include "fmt.h"
 #include "od.h"
 #include "stdio_base.h"
@@ -24,6 +23,8 @@ mutex_t lora_write_lock, serial_write_lock;
 static uint8_t serial_buffer[63];
 static size_t serial_buffer_count;
 
+#define ENABLE_DEBUG 0
+#include "debug.h"
 #define HEXDUMP(msg, buffer, len) if (ENABLE_DEBUG) { puts(msg); od_hex_dump(buffer, len, 0); }
 
 void to_serial(char *buffer, size_t len)
