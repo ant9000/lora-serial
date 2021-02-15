@@ -11,7 +11,7 @@
 
 static int cmd_lora(int argc, char **argv)
 {
-    char *usage = "usage: lora (bw|sf|cr|ch) [value]";
+    char *usage = "usage: lora (bw|sf|cr|ch|pw) [value]";
     (void)argc;
     (void)argv;
     if (((argc != 2) && (argc != 3)) || (strcmp(argv[0], "lora") != 0)) {
@@ -60,6 +60,12 @@ static int cmd_lora(int argc, char **argv)
             state.lora.channel = value;
         }
         printf("Channel: %lu\n", state.lora.channel);
+    } else if (strcmp(argv[1], "pw") == 0) {
+        if (argc == 3) {
+            int16_t value = atoi(argv[2]);
+            state.lora.power = value;
+        }
+        printf("Power: %d\n", state.lora.power);
     } else {
         puts(usage);
         return -1;
@@ -105,6 +111,7 @@ static int cmd_show(int argc, char **argv)
     printf("  Spreading factor: %u\n",  state.lora.spreading_factor);
     printf("  Coding rate:      4/%u\n",  state.lora.coderate+4);
     printf("  Channel:          %lu\n", state.lora.channel);
+    printf("  Power:            %d\n", state.lora.power);
     puts("AES");
     char hex[33];
     fmt_bytes_hex(hex, state.aes.key, 16);

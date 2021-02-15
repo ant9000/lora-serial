@@ -94,6 +94,7 @@ int main(void)
         state.lora.spreading_factor = DEFAULT_LORA_SPREADING_FACTOR;
         state.lora.coderate         = DEFAULT_LORA_CODERATE;
         state.lora.channel          = DEFAULT_LORA_CHANNEL;
+        state.lora.power            = DEFAULT_LORA_POWER;
         fmt_hex_bytes(state.aes.key, DEFAULT_AES_KEY);
     }
 

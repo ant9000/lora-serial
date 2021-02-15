@@ -35,11 +35,13 @@ int lora_init(const lora_state_t *state, forward_data_cb_t *forwarder)
     uint8_t  lora_sf = state->spreading_factor;
     uint8_t  lora_cr = state->coderate;
     uint32_t lora_ch = state->channel;
+    int16_t  lora_pw = state->power;
 
     netdev->driver->set(netdev, NETOPT_BANDWIDTH, &lora_bw, sizeof(lora_bw));
     netdev->driver->set(netdev, NETOPT_SPREADING_FACTOR, &lora_sf, sizeof(lora_sf));
     netdev->driver->set(netdev, NETOPT_CODING_RATE, &lora_cr, sizeof(lora_cr));
     netdev->driver->set(netdev, NETOPT_CHANNEL_FREQUENCY, &lora_ch, sizeof(lora_ch));
+    netdev->driver->set(netdev, NETOPT_TX_POWER, &lora_pw, sizeof(lora_pw));
 
     netdev->event_callback = _lora_rx_cb;
 
