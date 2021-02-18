@@ -59,3 +59,39 @@ Now connect the second LoRa module to another Linux board `pc2`; suppose it is a
 ```screen /dev/ttyACM0 115200```
 
 from `pc2` you will obtain a remote login shell to `pc1`, over the LoRa link.
+
+
+RIOTBOOT
+--------
+
+It is possible to program the modules with Riotboot DFU bootloader: successive firmware upgrades can then be carried out using USB only. The bootloader is programmed like this:
+
+```
+BOARD=samr34-xpro make -C ../riot/bootloaders/riotboot_dfu/ all flash
+```
+
+When the board has the bootloader in place, you can produce and flash a new firmware via USB:
+
+```
+FEATURES_REQUIRED+=riotboot USEMODULE+=usbus_dfu PROGRAMMER=dfu-util SERIAL_INTERFACE=usb make riotboot/flash-slot0
+```
+
+or, making use of the alternate slot:
+
+```
+FEATURES_REQUIRED+=riotboot USEMODULE+=usbus_dfu PROGRAMMER=dfu-util SERIAL_INTERFACE=usb make riotboot/flash-slot1 DFU_ALT=1
+```
+
+Please note that the `dfu-util` tool is not part of RIOT and must be installed separately. Also, on Linux you need to make sure that the USB nodes used for communicating with your device are accessible to your user. Assuming you are a member of `plugdev` group, execute the following commands as root:
+
+```
+cat >/etc/udev/rules.d/99-riot.rules <<EOF
+# default VID:PID
+ATTRS{idVendor}=="1209", ATTRS{idProduct}=="0001", MODE="664", GROUP="plugdev"
+# DFU mode
+ATTRS{idVendor}=="1209", ATTRS{idProduct}=="7d00", MODE="664", GROUP="plugdev"
+ATTRS{idVendor}=="1209", ATTRS{idProduct}=="7d02", MODE="664", GROUP="plugdev"
+EOF
+udevadm control --reload-rules
+udevadm trigger
+```
