@@ -86,6 +86,27 @@ void to_lora(char *buffer, size_t len)
     mutex_unlock(&lora_write_lock);
 }
 
+static bool loop=1;
+static void timeout_cb(void *arg)
+{
+    (void)arg;
+    if (loop) {
+        loop=0;
+        LED1_ON;
+        puts("Entering config mode - use 'help' for enumerating commands.");
+    }
+}
+static ztimer_t timeout = { .callback = timeout_cb };
+static void btn_cb(void *arg)
+{
+    (void)arg;
+    if (gpio_read(BTN0_PIN) == 0) {
+        ztimer_set(ZTIMER_MSEC, &timeout, 2500);
+    } else {
+        ztimer_remove(ZTIMER_MSEC, &timeout);
+    }
+}
+
 int main(void)
 {
     if (load_from_flash (&state, sizeof(state)) < 0) {
@@ -98,13 +119,16 @@ int main(void)
         fmt_hex_bytes(state.aes.key, DEFAULT_AES_KEY);
     }
 
-    gpio_init(BTN0_PIN, BTN0_MODE);
+    gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_BOTH, btn_cb, NULL);
     if (gpio_read(BTN0_PIN) == 0) {
+        puts("Entering config mode - use 'help' for enumerating commands.");
         enter_configuration_mode();
     }
 
+    gpio_init(LED0_PIN, GPIO_OUT);
+    gpio_init(LED1_PIN, GPIO_OUT);
     LED0_ON;
-    LED1_ON;
+    LED1_OFF;
     // setup hwrng
     hwrng_init();
     // setup AES
@@ -115,13 +139,12 @@ int main(void)
     // put radio in listen mode
     lora_listen();
     LED0_OFF;
-    LED1_OFF;
 
     uint8_t *start;
     size_t n, buffer_free;
     // read from serial
     serial_buffer_count = 0;
-    while (1) {
+    while (loop) {
         if (serial_buffer_count == sizeof(serial_buffer)) { // buffer full
             to_lora((char *)serial_buffer, serial_buffer_count);
             serial_buffer_count = 0;
@@ -135,5 +158,6 @@ int main(void)
             serial_buffer_count = 0;
         }
     }
+    enter_configuration_mode();
     return 0;
 }
