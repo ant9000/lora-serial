@@ -171,24 +171,22 @@ static const shell_command_t shell_commands[] = {
     { NULL, NULL, NULL }
 };
 
-static char _stack[THREAD_STACKSIZE_DEFAULT];
-void *blink_led(void *arg) {
+static ztimer_t timeout;
+static void timeout_cb(void *arg)
+{
     (void)arg;
-
-    gpio_init(LED1_PIN, GPIO_OUT);
-    while (true) {
-        gpio_toggle(LED1_PIN);
-        xtimer_sleep(1);
-    }
+    gpio_toggle(LED1_PIN);
+    ztimer_set(ZTIMER_MSEC, &timeout, 1000);
 }
 
 void enter_configuration_mode(void) {
-    thread_create(_stack, sizeof(_stack), THREAD_PRIORITY_MAIN - 1,
-        THREAD_CREATE_WOUT_YIELD | THREAD_CREATE_STACKTEST,
-        blink_led, NULL, "led");
-
     char line_buf[SHELL_DEFAULT_BUFSIZE];
 
-    puts("Entering config mode - use 'help' for enumerating commands.");
+    gpio_init(LED1_PIN, GPIO_OUT);
+    LED1_ON;
+
+    timeout.callback = timeout_cb;
+    ztimer_set(ZTIMER_MSEC, &timeout, 1000);
+
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 }
