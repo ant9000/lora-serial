@@ -60,7 +60,12 @@ int lora_write(char *msg, size_t len)
         .iol_len = len,
     };
     netdev_t *netdev = (netdev_t *)&sx127x;
-    while (netdev->driver->send(netdev, &payload) == -ENOTSUP) { xtimer_usleep64(100); }
+    // wait for radio to stop transmitting
+    while (netdev->driver->send(netdev, &payload) == -ENOTSUP) { xtimer_usleep(10); }
+    // wait for end of transmission, adding a few usecs to time on air
+    uint32_t delay = sx127x_get_time_on_air(&sx127x, iolist_size(&payload));
+    xtimer_usleep(delay * 1000 + 10);
+
     return len;
 }
 
