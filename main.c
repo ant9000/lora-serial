@@ -27,11 +27,14 @@ static size_t serial_buffer_count;
 #include "debug.h"
 #define HEXDUMP(msg, buffer, len) if (ENABLE_DEBUG) { puts(msg); od_hex_dump(buffer, len, 0); }
 
-void to_serial(char *buffer, size_t len)
+static void discarded_cb(void *arg) { (void)arg; LED2_OFF; }
+static ztimer_t discarded_timeout = { .callback = discarded_cb };
+void from_lora(char *buffer, size_t len)
 {
     mutex_lock(&serial_write_lock);
     LED0_ON;
     int n = len - 12 - 16;
+    bool discarded = 1;
     if ((n > 0) && (n <= MAX_PAYLOAD_LEN + 16)) {
         HEXDUMP("RECEIVED PACKET:", buffer, len);
         uint8_t *aes_input = (uint8_t *)buffer;
@@ -46,6 +49,7 @@ void to_serial(char *buffer, size_t len)
             if (c <= 16) {
                 n -= c;
                 stdio_write((char *)aes_output, n);
+                discarded = 0;
             } else {
                 // packet with invalid padding - discard
                 DEBUG_PUTS("INVALID PADDING");
@@ -59,6 +63,11 @@ void to_serial(char *buffer, size_t len)
         HEXDUMP("PACKET HAS INVALID LENGTH", (char *)&len, 4);
     }
     LED0_OFF;
+    if (discarded) {
+        LED2_ON;
+        ztimer_remove(ZTIMER_MSEC, &discarded_timeout);
+        ztimer_set(ZTIMER_MSEC, &discarded_timeout, 500);
+    }
     mutex_unlock(&serial_write_lock);
 }
 
@@ -135,7 +144,7 @@ int main(void)
     aes_init();
     aes_sync_set_encrypt_key(&aes, state.aes.key, AES_KEY_128);
     // setup LoRa
-    if (lora_init(&(state.lora), *to_serial) != 0) { return 1; }
+    if (lora_init(&(state.lora), *from_lora) != 0) { return 1; }
     // put radio in listen mode
     lora_listen();
     LED0_OFF;
