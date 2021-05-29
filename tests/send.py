@@ -12,15 +12,11 @@ if len(sys.argv) > 2:
 if len(sys.argv) > 3:
     count = int(sys.argv[3])
 
-s = serial.Serial(device, baud, timeout=0)
+s = serial.Serial(device, baud)
 i = 0
 try:
     while True:
         for c in range(32,127):
-            x = s.read(1)
-            if x == serial.XOFF:
-                while x != serial.XON:
-                    x = s.read(1)
             i += 1
             s.write(bytes([c]))
             print(chr(c), end='')

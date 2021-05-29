@@ -12,9 +12,6 @@
 #include "configuration.h"
 #include "aes.h"
 
-#define XON  0x11
-#define XOFF 0x13
-
 serialized_state_t state;
 
 struct aes_sync_device aes;
@@ -153,18 +150,14 @@ int main(void)
     lora_listen();
     LED0_OFF;
 
-    uint8_t *start, flow;
+    uint8_t *start;
     size_t n, buffer_free;
     // read from serial
     serial_buffer_count = 0;
     while (loop) {
         if (serial_buffer_count == sizeof(serial_buffer)) { // buffer full
-            flow = XOFF;
-            stdio_write(&flow, 1);
             to_lora((char *)serial_buffer, serial_buffer_count);
             serial_buffer_count = 0;
-            flow = XON;
-            stdio_write(&flow, 1);
         }
         start = serial_buffer + serial_buffer_count;
         buffer_free = sizeof(serial_buffer) - serial_buffer_count;
