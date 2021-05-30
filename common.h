@@ -16,6 +16,7 @@
 #define DEFAULT_LORA_CHANNEL          SX127X_CHANNEL_DEFAULT
 #define DEFAULT_LORA_POWER            SX127X_RADIO_TX_POWER
 #define DEFAULT_AES_KEY               "c165dac2f95a4444b52dc92a36e2bc05"
+#define DEFAULT_ACK_REQUIRED          0
 
 typedef struct {
     uint8_t key[16];
@@ -24,6 +25,7 @@ typedef struct {
 typedef struct {
     lora_state_t lora;
     aes_state_t  aes;
+    bool         ack_required;
 } serialized_state_t;
 
 extern serialized_state_t state;

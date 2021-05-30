@@ -49,6 +49,7 @@ void from_lora(char *buffer, size_t len)
                 n -= c;
                 stdio_write((char *)aes_output, n);
                 discarded = 0;
+                // TODO: if state.ack_required, send ACK
             } else {
                 // packet with invalid padding - discard
                 DEBUG_PUTS("INVALID PADDING");
@@ -90,6 +91,7 @@ void to_lora(char *buffer, size_t len)
     len += 16;
     HEXDUMP("ENCRYPTED PACKET:", (char *)aes_output, len);
     lora_write((char *)aes_output, len);
+    // TODO: if state.ack_required, wait for ACK
     LED1_OFF;
     mutex_unlock(&lora_write_lock);
 }
@@ -125,6 +127,7 @@ int main(void)
         state.lora.channel          = DEFAULT_LORA_CHANNEL;
         state.lora.power            = DEFAULT_LORA_POWER;
         fmt_hex_bytes(state.aes.key, DEFAULT_AES_KEY);
+        state.ack_required          = DEFAULT_ACK_REQUIRED;
     }
 
     gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_BOTH, btn_cb, NULL);
