@@ -5,6 +5,7 @@ EXTERNAL_BOARD_DIRS ?= $(CURDIR)/../lora3a-boards/boards
 QUIET ?= 1
 DEVELHELP ?= 1
 
+USEMODULE += stdio_cdc_acm
 USEMODULE += periph_hwrng
 USEMODULE += periph_flashpage
 USEMODULE += sx1276
@@ -16,8 +17,6 @@ USEMODULE += od_string
 USEMODULE += shell
 
 CFLAGS += -DCONFIG_SKIP_BOOT_MSG=1
-
-USEMODULE += stdio_cdc_acm
 CFLAGS += -DCONFIG_USB_MAX_POWER=500
 CFLAGS += -DCONFIG_USBUS_CDC_ACM_STDIO_BLOCKING=1
 
