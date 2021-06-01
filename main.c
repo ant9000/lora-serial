@@ -64,7 +64,7 @@ void from_lora(char *buffer, size_t len)
                     } else {
                         DEBUG_PUTS("DISCARDING DUPLICATE");
                     }
-                    if (state.ack_required) {
+                    if (state.comm.ack_required) {
                         hwrng_read(nonce, 12);
                         header->ack = 1;
                         to_lora((char *)nonce, 12, header);
@@ -123,13 +123,14 @@ void to_lora(char *buffer, size_t len, header_t *header)
     len += sizeof(header_t);
     HEXDUMP("ENCRYPTED PACKET:", aes_output, len);
     lora_write((char *)aes_output, len);
-    if ((header->ack == 0) && state.ack_required) {
+    if ((header->ack == 0) && state.comm.ack_required) {
         // resend packet periodically until it is ack'd or the retry count has exceeded
         msg_t msg;
         msg.content.value = 0;
         size_t retry_count = 0;
-        while (((msg.type == MSG_ZTIMER) || (msg.content.value == 0)) && (retry_count++ < 3)) {
-            ztimer_msg_receive_timeout(ZTIMER_MSEC, &msg, 100);
+        while (((msg.type == MSG_ZTIMER) || (msg.content.value == 0))) {
+            if ((state.comm.retry_count > 0) && (retry_count++ >= state.comm.retry_count)) { break; }
+            ztimer_msg_receive_timeout(ZTIMER_MSEC, &msg, state.comm.retry_timeout);
             if ((msg.type == MSG_ZTIMER) || (msg.content.value == 0)) { lora_write((char *)aes_output, len); }
         }
     }
@@ -168,7 +169,9 @@ int main(void)
         state.lora.channel          = DEFAULT_LORA_CHANNEL;
         state.lora.power            = DEFAULT_LORA_POWER;
         fmt_hex_bytes(state.aes.key, DEFAULT_AES_KEY);
-        state.ack_required          = DEFAULT_ACK_REQUIRED;
+        state.comm.ack_required     = DEFAULT_COMM_ACK_REQUIRED;
+        state.comm.retry_count      = DEFAULT_COMM_RETRY_COUNT;
+        state.comm.retry_timeout    = DEFAULT_COMM_RETRY_TIMEOUT;
     }
 
     gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_BOTH, btn_cb, NULL);

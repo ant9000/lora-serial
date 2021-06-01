@@ -102,14 +102,60 @@ static int cmd_aes(int argc, char **argv)
 }
 
 
+static int cmd_comm(int argc, char **argv)
+{
+    char *usage = "usage: comm (ack|retries|timeout) [value]";
+    (void)argc;
+    (void)argv;
+    if (((argc != 2) && (argc != 3)) || (strcmp(argv[0], "comm") != 0)) {
+        puts(usage);
+        return -1;
+    }
+    if (strcmp(argv[1], "ack") == 0) {
+        if (argc == 3) {
+            if (strcmp(argv[2], "1") == 0) {
+                state.comm.ack_required = 1;
+            } else if (strcmp(argv[2], "0") == 0) {
+                state.comm.ack_required = 0;
+            } else {
+                puts("Ack required can be 0 or 1");
+                return -1;
+            }
+        }
+        printf("Ack required: %d\n", state.comm.ack_required);
+    } else if (strcmp(argv[1], "retries") == 0) {
+        if (argc == 3) {
+            int value = atoi(argv[2]);
+            if ((value >= 0) && (value <= 255)) {
+                state.comm.retry_count = (uint8_t)value;
+            } else {
+                puts("Retry count not in 0-255 (use 0 to retry forever)");
+                return -1;
+            }
+        }
+        printf("Retry count: %d\n", state.comm.retry_count);
+    } else if (strcmp(argv[1], "timeout") == 0) {
+        if (argc == 3) {
+            int value = atoi(argv[2]);
+            state.comm.retry_timeout = (uint16_t)value;
+        }
+        printf("Retry timeout: %u ms\n", state.comm.retry_timeout);
+    } else {
+        puts(usage);
+        return -1;
+    }
+    return 0;
+}
+
+
 static int cmd_show(int argc, char **argv)
 {
     (void)argc;
     (void)argv;
     puts("LORA");
     printf("  Bandwidth:        %u kHz\n", 125*(1<<state.lora.bandwidth));
-    printf("  Spreading factor: %u\n",  state.lora.spreading_factor);
-    printf("  Coding rate:      4/%u\n",  state.lora.coderate+4);
+    printf("  Spreading factor: %u\n", state.lora.spreading_factor);
+    printf("  Coding rate:      4/%u\n", state.lora.coderate+4);
     printf("  Channel:          %lu\n", state.lora.channel);
     printf("  Power:            %d\n", state.lora.power);
     puts("AES");
@@ -117,6 +163,10 @@ static int cmd_show(int argc, char **argv)
     fmt_bytes_hex(hex, state.aes.key, 16);
     hex[32] = 0;
     printf("  Key: %s\n", hex);
+    puts("COMM");
+    printf("  ACK required:  %d\n", state.comm.ack_required);
+    printf("  Retry count:   %d\n", state.comm.retry_count);
+    printf("  Retry timeout: %d ms\n", state.comm.retry_timeout);
     return 0;
 }
 
@@ -163,6 +213,7 @@ static int cmd_reboot(int argc, char **argv)
 static const shell_command_t shell_commands[] = {
     { "lora",   "get/set lora values",  cmd_lora   },
     { "aes",    "get/set aes values",   cmd_aes    },
+    { "comm",   "get/set comm values",  cmd_comm   },
     { "show",   "show configuration",   cmd_show   },
     { "load",   "load flash contents",  cmd_load   },
     { "erase",  "clear flash contents", cmd_erase  },

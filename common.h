@@ -21,16 +21,26 @@ typedef struct {
 #define DEFAULT_LORA_CHANNEL          SX127X_CHANNEL_DEFAULT
 #define DEFAULT_LORA_POWER            SX127X_RADIO_TX_POWER
 #define DEFAULT_AES_KEY               "c165dac2f95a4444b52dc92a36e2bc05"
-#define DEFAULT_ACK_REQUIRED          1
+/* ack required provides more reliable transport at the expense of speed - think TCP vs UDP */
+/* if an ack is not received within the timeout, resend for the specified number of times   */
+#define DEFAULT_COMM_ACK_REQUIRED     1
+#define DEFAULT_COMM_RETRY_COUNT      3    /* use 0 to retry forever */
+#define DEFAULT_COMM_RETRY_TIMEOUT    100  /* value is in ms */
 
 typedef struct {
     uint8_t key[16];
 } aes_state_t;
 
 typedef struct {
+    bool ack_required;
+    uint8_t retry_count;
+    uint16_t retry_timeout;
+} comm_state_t;
+
+typedef struct {
     lora_state_t lora;
     aes_state_t  aes;
-    bool         ack_required;
+    comm_state_t comm;
 } serialized_state_t;
 
 extern serialized_state_t state;
