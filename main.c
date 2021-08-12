@@ -18,7 +18,8 @@ serialized_state_t state;
 struct aes_sync_device aes;
 static uint8_t aes_input[MAX_PACKET_LEN], aes_output[MAX_PACKET_LEN];
 
-mutex_t lora_write_lock, serial_write_lock;
+mutex_t lora_write_lock = MUTEX_INIT;
+mutex_t serial_write_lock = MUTEX_INIT;
 
 static uint8_t serial_buffer[63];
 static size_t serial_buffer_count;
