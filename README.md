@@ -17,19 +17,13 @@ cd lora-serial
 USAGE
 -----
 
-To compile a firmware that forwards UART(0) via LoRA:
+To compile a firmware that forwards CDC ACM port via LoRA:
 
 ```
 make flash
 ```
 
-In case you want to forward the USB CDC ACM port:
-
-```
-make flash SERIAL_INTERFACE=usb
-```
-
-The chosen serial port is configured as 115200 8N1. On Linux it could be accessed, for instance, with:
+The serial port is configured as 115200 8N1. On Linux it could be accessed, for instance, with:
 
 ```
 minicom -D /dev/ttyACM0
@@ -52,7 +46,7 @@ EXAMPLE
 
 Connect one LoRa module to Linux machine `pc1`; let's say it appears as `/dev/ttyACM0`. Launch a terminal listener on that serial port, with
 
-```sudo agetty /dev/ttyACM0 115200```
+```sudo agetty ttyACM0 115200```
 
 Now connect the second LoRa module to another Linux board `pc2`; suppose it is available as `/dev/ttyACM0` there too. Then with
 

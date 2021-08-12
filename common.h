@@ -24,7 +24,7 @@ typedef struct {
 /* ack required provides more reliable transport at the expense of speed - think TCP vs UDP */
 /* if an ack is not received within the timeout, resend for the specified number of times   */
 #define DEFAULT_COMM_ACK_REQUIRED     1
-#define DEFAULT_COMM_RETRY_COUNT      3    /* use 0 to retry forever */
+#define DEFAULT_COMM_RETRY_COUNT      5    /* use 0 to retry forever */
 #define DEFAULT_COMM_RETRY_TIMEOUT    100  /* value is in ms */
 
 typedef struct {
