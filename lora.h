@@ -9,7 +9,7 @@ typedef struct {
     int16_t  power;
 } lora_state_t;
 
-typedef void (forward_data_cb_t)(char *buffer, size_t len);
+typedef void (forward_data_cb_t)(const char *buffer, size_t len);
 
 int lora_init(const lora_state_t *state, forward_data_cb_t *forwarder);
 int lora_write(char *msg, size_t len);
