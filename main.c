@@ -15,6 +15,7 @@
 serialized_state_t state;
 struct aes_sync_device aes;
 kernel_pid_t pid_main;
+consume_data_cb_t *packet_consumer;
 
 static bool loop=1;
 static void timeout_cb(void *arg)
@@ -72,6 +73,7 @@ int main(void)
     aes_init();
     aes_sync_set_encrypt_key(&aes, state.aes.key, AES_KEY_128);
     // setup LoRa
+    packet_consumer = *stdio_write;
     if (lora_init(&(state.lora), *from_lora) != 0) { return 1; }
     // put radio in listen mode
     lora_listen();

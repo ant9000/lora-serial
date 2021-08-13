@@ -13,6 +13,7 @@
 
 extern struct aes_sync_device aes;
 extern kernel_pid_t pid_main;
+extern consume_data_cb_t *packet_consumer;
 
 static uint8_t aes_input[MAX_PACKET_LEN], aes_output[MAX_PACKET_LEN];
 
@@ -57,7 +58,7 @@ void from_lora(const char *buffer, size_t len)
                     if (header->sequence_no != last_received) {
                         last_received = header->sequence_no;
                         rx_error = 0;
-                        stdio_write((char *)aes_output, n);
+                        packet_consumer((char *)aes_output, n);
                     } else {
                         DEBUG_PUTS("DISCARDING DUPLICATE");
                     }

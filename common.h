@@ -47,6 +47,8 @@ typedef struct {
     comm_state_t comm;
 } serialized_state_t;
 
+typedef ssize_t (consume_data_cb_t)(const void *buffer, size_t len);
+
 extern serialized_state_t state;
 
 #endif /* COMMON_H */
