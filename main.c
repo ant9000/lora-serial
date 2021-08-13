@@ -15,7 +15,6 @@
 serialized_state_t state;
 struct aes_sync_device aes;
 kernel_pid_t pid_main;
-uint8_t last_sent = 0, last_received = 0;
 
 static bool loop=1;
 static void timeout_cb(void *arg)
@@ -82,12 +81,9 @@ int main(void)
     size_t n, buffer_free;
     // read from serial
     serial_buffer_count = 0;
-    header_t header;
     while (loop) {
         if (serial_buffer_count == sizeof(serial_buffer)) { // buffer full
-            header.sequence_no = ++last_sent;
-            header.ack = 0;
-            to_lora((char *)serial_buffer, serial_buffer_count, &header);
+            to_lora((char *)serial_buffer, serial_buffer_count);
             serial_buffer_count = 0;
         }
         start = serial_buffer + serial_buffer_count;
@@ -95,9 +91,7 @@ int main(void)
         n = stdio_read((void *)start, buffer_free);
         serial_buffer_count += n;
         if (n > 0 && n < buffer_free) { // no pending chars on stdio
-            header.sequence_no = ++last_sent;
-            header.ack = 0;
-            to_lora((char *)serial_buffer, serial_buffer_count, &header);
+            to_lora((char *)serial_buffer, serial_buffer_count);
             serial_buffer_count = 0;
         }
     }

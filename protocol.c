@@ -19,11 +19,13 @@ static uint8_t aes_input[MAX_PACKET_LEN], aes_output[MAX_PACKET_LEN];
 mutex_t lora_write_lock = MUTEX_INIT;
 mutex_t lora_read_lock = MUTEX_INIT;
 
-extern uint8_t last_sent, last_received;
+static uint8_t last_sent = 0, last_received = 0;
 
 #define ENABLE_DEBUG 0
 #include "debug.h"
 #define HEXDUMP(msg, buffer, len) if (ENABLE_DEBUG) { puts(msg); od_hex_dump((char *)buffer, len, 0); }
+
+void _to_lora(const char *buffer, size_t len, header_t *header);
 
 static void rx_error_cb(void *arg) { (void)arg; LED0_OFF; }
 static ztimer_t rx_error_timeout = { .callback = rx_error_cb };
@@ -62,7 +64,7 @@ void from_lora(const char *buffer, size_t len)
                     if (state.comm.ack_required) {
                         hwrng_read(nonce, 12);
                         header->ack = 1;
-                        to_lora((char *)nonce, 12, header);
+                        _to_lora((char *)nonce, 12, header);
                     }
                 } else {
                     if (header->sequence_no == last_sent) {
@@ -93,12 +95,28 @@ void from_lora(const char *buffer, size_t len)
     mutex_unlock(&lora_read_lock);
 }
 
-void to_lora(const char *buffer, size_t len, const header_t *header)
+void to_lora(const char *buffer, size_t len)
+{
+    header_t header;
+    header.ack = 0;
+    header.sequence_no = ++last_sent;
+    _to_lora(buffer, len, &header);
+}
+
+void _to_lora(const char *buffer, size_t len, header_t *header)
 {
     mutex_lock(&lora_write_lock);
     LED1_ON;
     uint8_t nonce[12];
     uint8_t tag[16];
+    header_t h;
+
+    if (header == NULL) {
+        h.ack = 0;
+        h.sequence_no = ++last_sent;
+        header = &h;
+    }
+
     hwrng_read(nonce, 12);
     // pad input to a multiple of 128 bits using PKCS#7
     memcpy(aes_input, (uint8_t *)buffer, len);

@@ -2,6 +2,6 @@
 #define PROTOCOL_H
 
 void from_lora(const char *buffer, size_t len);
-void to_lora(const char *buffer, size_t len, const header_t *header);
+void to_lora(const char *buffer, size_t len);
 
 #endif /* PROTOCOL_H */
