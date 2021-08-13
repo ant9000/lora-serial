@@ -19,7 +19,7 @@ struct aes_sync_device aes;
 static uint8_t aes_input[MAX_PACKET_LEN], aes_output[MAX_PACKET_LEN];
 
 mutex_t lora_write_lock = MUTEX_INIT;
-mutex_t serial_write_lock = MUTEX_INIT;
+mutex_t lora_read_lock = MUTEX_INIT;
 
 static uint8_t serial_buffer[63];
 static size_t serial_buffer_count;
@@ -31,12 +31,12 @@ void to_lora(char *buffer, size_t len, header_t *header);
 #include "debug.h"
 #define HEXDUMP(msg, buffer, len) if (ENABLE_DEBUG) { puts(msg); od_hex_dump((char *)buffer, len, 0); }
 
-static void rx_error_cb(void *arg) { (void)arg; LED2_OFF; }
+static void rx_error_cb(void *arg) { (void)arg; LED0_OFF; }
 static ztimer_t rx_error_timeout = { .callback = rx_error_cb };
 void from_lora(char *buffer, size_t len)
 {
-    mutex_lock(&serial_write_lock);
-    LED0_ON;
+    mutex_lock(&lora_read_lock);
+    LED2_ON;
     HEXDUMP("RECEIVED PACKET:", buffer, len);
     int n = len - 12 - 16 - sizeof(header_t);
     bool rx_error = 1;
@@ -90,13 +90,13 @@ void from_lora(char *buffer, size_t len)
         // invalid length - discard
         HEXDUMP("PACKET HAS INVALID LENGTH", &len, 4);
     }
-    LED0_OFF;
+    LED2_OFF;
     if (rx_error) {
-        LED2_ON;
+        LED0_ON;
         ztimer_remove(ZTIMER_MSEC, &rx_error_timeout);
         ztimer_set(ZTIMER_MSEC, &rx_error_timeout, 500);
     }
-    mutex_unlock(&serial_write_lock);
+    mutex_unlock(&lora_read_lock);
 }
 
 void to_lora(char *buffer, size_t len, header_t *header)
@@ -146,7 +146,6 @@ static void timeout_cb(void *arg)
     if (loop) {
         loop=0;
         LED1_ON;
-        puts("Entering config mode - use 'help' for enumerating commands.");
     }
 }
 static ztimer_t timeout = { .callback = timeout_cb };
@@ -174,10 +173,10 @@ int main(void)
         state.comm.retry_count      = DEFAULT_COMM_RETRY_COUNT;
         state.comm.retry_timeout    = DEFAULT_COMM_RETRY_TIMEOUT;
     }
+    pid_main = thread_getpid();
 
     gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_BOTH, btn_cb, NULL);
     if (gpio_read(BTN0_PIN) == 0) {
-        puts("Entering config mode - use 'help' for enumerating commands.");
         enter_configuration_mode();
     }
 
@@ -200,7 +199,6 @@ int main(void)
 
     uint8_t *start;
     size_t n, buffer_free;
-    pid_main = thread_getpid();
     // read from serial
     serial_buffer_count = 0;
     header_t header;

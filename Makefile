@@ -9,7 +9,6 @@ USEMODULE += stdio_cdc_acm
 USEMODULE += periph_hwrng
 USEMODULE += periph_flashpage
 USEMODULE += sx1276
-USEMODULE += xtimer
 USEMODULE += isrpipe
 USEMODULE += fmt
 USEMODULE += od

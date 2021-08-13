@@ -1,9 +1,8 @@
 #include <string.h>
-
+#include "board.h"
 #include "periph/hwrng.h"
 #include "periph/pm.h"
 
-#include "thread.h"
 #include "fmt.h"
 #include "shell.h"
 
@@ -239,5 +238,6 @@ void enter_configuration_mode(void) {
     timeout.callback = timeout_cb;
     ztimer_set(ZTIMER_MSEC, &timeout, 1000);
 
+    puts("Entering config mode - use 'help' for enumerating commands.");
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
 }

@@ -1,3 +1,6 @@
+#ifndef AES_H
+#define AES_H
+
 #include <inttypes.h>
 
 enum aes_action { AES_DECRYPT, AES_ENCRYPT };
@@ -16,3 +19,5 @@ int32_t aes_sync_gcm_crypt_and_tag(struct aes_sync_device *const dev, const enum
                                    const uint8_t *input, uint8_t *output, uint32_t length, const uint8_t *iv,
                                    uint32_t iv_len, const uint8_t *aad, uint32_t aad_len, uint8_t *tag,
                                    uint32_t tag_len);
+
+#endif /* AES_H */

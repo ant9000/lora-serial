@@ -1,5 +1,8 @@
+#ifndef COMMON_H
+#define COMMON_H
+
 #include <inttypes.h>
-#include "xtimer.h"
+#include "ztimer.h"
 #include "net/lora.h"
 #include "sx127x.h"
 
@@ -27,6 +30,7 @@ typedef struct {
 #define DEFAULT_COMM_RETRY_COUNT      5    /* use 0 to retry forever */
 #define DEFAULT_COMM_RETRY_TIMEOUT    100  /* value is in ms */
 
+
 typedef struct {
     uint8_t key[16];
 } aes_state_t;
@@ -44,3 +48,5 @@ typedef struct {
 } serialized_state_t;
 
 extern serialized_state_t state;
+
+#endif /* COMMON_H */
