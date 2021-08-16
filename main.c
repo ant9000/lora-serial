@@ -11,6 +11,7 @@
 #include "configuration.h"
 #include "protocol.h"
 #include "aes.h"
+#include "pairing.h"
 
 serialized_state_t state;
 struct aes_sync_device aes;
@@ -56,9 +57,14 @@ int main(void)
     }
     pid_main = thread_getpid();
 
+    // setup hwrng
+    hwrng_init();
+    // setup AES
+    aes_init();
+
     gpio_init_int(BTN0_PIN, BTN0_MODE, GPIO_BOTH, btn_cb, NULL);
     if (gpio_read(BTN0_PIN) == 0) {
-        enter_configuration_mode();
+        enter_pairing_mode();
     }
 
     gpio_init(LED0_PIN, GPIO_OUT);
@@ -67,10 +73,7 @@ int main(void)
     LED0_ON;
     LED1_OFF;
     LED2_OFF;
-    // setup hwrng
-    hwrng_init();
-    // setup AES
-    aes_init();
+
     aes_sync_set_encrypt_key(&aes, state.aes.key, AES_KEY_128);
     // setup LoRa
     packet_consumer = *stdio_write;
