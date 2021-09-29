@@ -8,6 +8,7 @@ DEVELHELP ?= 1
 USEMODULE += stdio_cdc_acm
 USEMODULE += periph_hwrng
 USEMODULE += periph_flashpage
+USEMODULE += ztimer_usec
 USEMODULE += sx1276
 USEMODULE += isrpipe
 USEMODULE += fmt
